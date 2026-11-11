@@ -33,17 +33,15 @@ The request is for a complete, step-by-step guide with commands for a non-techni
 
 Here are the specific challenges and AWS requirements:
 
-### 1. Infrastructure & Firecracker Requirement
-Because Atlas uses **Firecracker microVMs** to run individual servers, it requires virtualization capabilities at the hardware level (KVM). Standard AWS EC2 instances do not support this natively.
-- **AWS Settings**: You must use **AWS EC2 Bare Metal instances** (e.g., `i3.metal`, `m5.metal`, or `mac` instances depending on the region) which are highly expensive. Alternatively, you would need to use instances that explicitly support nested virtualization.
+### 1. Infrastructure Requirements
+Atlas places user servers on physical hosts. Each of those user servers is a **Firecracker microVM**.
+- **AWS Settings**: If deploying on AWS, your EC2 instances serving as physical hosts for Atlas must support booting these Firecracker microVM workloads.
 
 ### 2. Minimum Production Setup (Servers Needed)
-You cannot deploy Frappe Cloud v2 on a single server for production. The architecture strictly splits the control plane from the data/compute plane. At an absolute minimum, you need **3 distinct servers** to start:
-- **Server 1 (Central):** The control plane system (this repository). It runs the Vue console, billing, and team management APIs. A standard compute instance can run this.
-- **Server 2 (Atlas):** The regional infrastructure orchestrator. This **must** be a bare-metal physical host (e.g., an AWS EC2 Bare Metal instance) because it boots Firecracker microVMs to run the user workloads (which in turn run Pilot and Frappe).
-- **Server 3 (Cargo):** The image building system. It installs Ubuntu, Pilot, and Frappe into deployable images that Atlas uses.
-
-*Note: In a true, highly-available production environment, you would likely need clusters for Central and multiple Atlas nodes per region.*
+You cannot deploy Frappe Cloud v2 on a single server for production. The architecture strictly splits the control plane from the data/compute plane. At a minimum, you need **2 distinct systems** to start:
+- **System 1 (Central):** The control plane system (this repository). It runs the Vue console, billing, and team management APIs.
+- **System 2 (Atlas):** The regional infrastructure orchestrator. It runs on a physical host and boots Firecracker microVMs to run the user workloads (which then run Pilot and Frappe).
+  - *Note on Cargo:* **Cargo** (the image building system) is not a standalone peer server you must manually provision. Cargo is created by Atlas and depends on Atlas being there first. Atlas builds Cargo in the region and gives it its own credentials.
 
 ### 3. Advanced Networking
 Atlas manages its own network stack:
