@@ -37,12 +37,12 @@ Here are the specific challenges and AWS requirements:
 Because Atlas uses **Firecracker microVMs** to run individual servers, it requires virtualization capabilities at the hardware level (KVM). Standard AWS EC2 instances do not support this natively.
 - **AWS Settings**: You must use **AWS EC2 Bare Metal instances** (e.g., `i3.metal`, `m5.metal`, or `mac` instances depending on the region) which are highly expensive. Alternatively, you would need to use instances that explicitly support nested virtualization.
 
-### 2. Distributed Systems Deployment
-You cannot deploy this on a single server. A production setup requires:
-- A server (or cluster) running the **Central** control plane.
-- Bare metal regional host servers running **Atlas**.
-- Build servers running **Cargo**.
-- You must securely interconnect all these systems.
+### 2. Why a Single-Server Production Setup is Unviable
+You cannot deploy Frappe Cloud v2 on a single server for production. The architecture strictly splits the control plane from the data/compute plane:
+- **Separation of Concerns:** The **Central** system (this repository) is just the control plane (the console and billing). It does not run user applications.
+- **Infrastructure Requirements:** The user workloads are orchestrated by **Atlas** running on separate, dedicated bare-metal regional hosts. Atlas creates secure isolation using Firecracker microVMs. It cannot be combined on the same single standard EC2 instance with the Central control plane.
+- **Image Building:** A third separate system, **Cargo**, builds the Ubuntu/Frappe images.
+- **No Single-Node Installer:** Unlike older monolithic platforms, Frappe Cloud v2 has no automated "single-node" setup script for production. It is explicitly designed as a multi-node distributed orchestrator for a commercial cloud offering.
 
 ### 3. Advanced Networking
 Atlas manages its own network stack:
